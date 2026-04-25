@@ -29,7 +29,6 @@ action :run do
       },
     },
 
-
     static_resources: {
       clusters: clusters,
       listeners: listeners

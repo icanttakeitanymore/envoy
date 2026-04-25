@@ -110,10 +110,10 @@ module EnvoyVhostCompiler
       http_health_check: {
         path: hc[:path],
         expected_statuses: hc[:expected_statuses] || [
-        { start: 200, end: 201 }
-      ]
+          { start: 200, end: 201 }
+        ]
       }
-      
+
     }
   end
 

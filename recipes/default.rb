@@ -25,26 +25,25 @@ remote_file '/usr/local/bin/envoy' do
   action :create
 end
 
-
 # 1. Systemd unit
 systemd_unit 'envoy.service' do
   content({
-    Unit: {
-      Description: 'Envoy Proxy',
-      After: 'network.target'
-    },
-    Service: {
-      ExecStartPre: '/usr/local/bin/envoy --mode validate -c /etc/envoy/envoy.yaml',
-      ExecStart: '/usr/local/bin/envoy -c /etc/envoy/envoy.yaml',
-      ExecReload: '/bin/kill -HUP $MAINPID',
-      Restart: 'always',
-      RestartSec: '5s',
-      LimitNOFILE: 65536
-    },
-    Install: {
-      WantedBy: 'multi-user.target'
-    }
-  })
+            Unit: {
+              Description: 'Envoy Proxy',
+              After: 'network.target'
+            },
+            Service: {
+              ExecStartPre: '/usr/local/bin/envoy --mode validate -c /etc/envoy/envoy.yaml',
+              ExecStart: '/usr/local/bin/envoy -c /etc/envoy/envoy.yaml',
+              ExecReload: '/bin/kill -HUP $MAINPID',
+              Restart: 'always',
+              RestartSec: '5s',
+              LimitNOFILE: 65536
+            },
+            Install: {
+              WantedBy: 'multi-user.target'
+            }
+          })
   action [:create, :enable]
 end
 
@@ -54,8 +53,15 @@ execute 'validate_envoy_config' do
   notifies :reload, 'systemd_unit[envoy.service]', :delayed
 end
 
+node['envoy']['vhosts'].each do |vhost_name, _|
+  envoy_vhosts vhost_name do
+    notifies :run, 'envoy_bootstrap[gen_config]', :delayed
+  end
+end
+
 envoy_bootstrap 'gen_config' do
   notifies :run, 'execute[validate_envoy_config]', :immediately
+  action :nothing
 end
 
 service 'envoy' do
